@@ -2,7 +2,7 @@ project: Detecting AI-generated images under generator shift
 
 seed:
   data_split: 42          # numpy shuffle used for the splits
-  resnet_training: 42     # torch seed set before ResNet training
+  resnet_training: 42     # set after the model was created: fixes batch order, not starting weights
   cnn_training: not set   # CNN training was not seeded, use the saved weights
 
 dataset:

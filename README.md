@@ -75,7 +75,7 @@ The image-collection cell streams about 6,000 rows over the internet and takes s
 
 ## Reproducibility notes
 
-- The data split uses seed 42, and the ResNet is seeded with `torch.manual_seed(42)`.
-- The CNN training was not seeded, so re-training it gives slightly different numbers. The trained weights are saved in `models/` and the reported results come from them.
+- The data split uses seed 42. `torch.manual_seed(42)` was set before ResNet training, after the model was created, so it fixes the batch order but not the starting weights.
+- The CNN was not seeded at all. Re-training either network therefore gives slightly different numbers. The trained weights are saved in `models/` and the reported results come from them.
 - GPU training is not bit-for-bit repeatable, so small differences are possible for every model.
 - The subset depends on the dataset keeping the same row order on Hugging Face.
