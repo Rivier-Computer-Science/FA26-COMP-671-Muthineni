@@ -94,6 +94,73 @@ The CNN stopped after epoch 17, and its best validation loss was 0.468, reached 
 
 **Reproducibility.** The data split uses NumPy seed 42, and the noise in the diffusion detector uses fixed seeds, so its errors are repeatable. The torch seed 42 was set before ResNet training but after the model was created, so it fixes the batch order and not the starting weights, and the CNN was not seeded. Re-training a network will therefore give slightly different numbers, and the reported results come from the saved weights in the repository. Package versions are pinned in requirements.txt and the settings are listed in config.yaml.
 
+## 5. Results
+
+**Scores on the two test sets.** Table 3 and Figure 1 give the scores of the three detectors. On the SD15 test set, the generator seen in training, the ResNet scores highest (accuracy 0.793, AUROC 0.911), the CNN is next (0.747, 0.840) and the diffusion detector is lowest (0.600, 0.614). The ResNet and the CNN differ by about 0.05 in accuracy and 0.07 in AUROC, which on 150 images and one run per model is not enough to call one of them better. The diffusion detector's SD15 scores are only just above the chance bands given in Section 4. On Midjourney, the unseen generator, every detector is at chance: accuracy is between 0.477 and 0.513 and AUROC between 0.458 and 0.527, all inside the chance bands.
+
+| Detector | Test set | Accuracy | AUROC | F1 |
+|---|---|---|---|---|
+| CNN | SD15 (seen) | 0.747 | 0.840 | 0.725 |
+| CNN | Midjourney (unseen) | 0.513 | 0.492 | 0.324 |
+| ResNet | SD15 (seen) | 0.793 | 0.911 | 0.795 |
+| ResNet | Midjourney (unseen) | 0.477 | 0.458 | 0.249 |
+| Diffusion error | SD15 (seen) | 0.600 | 0.614 | 0.559 |
+| Diffusion error | Midjourney (unseen) | 0.507 | 0.527 | 0.452 |
+
+*Table 3. Test scores. The SD15 test set has 75 real and 75 fake images, and the Midjourney test set has 150 and 150.*
+
+![](../results/comparison_chart.png)
+
+*Figure 1. Accuracy of the three detectors on the SD15 test set (seen in training) and the Midjourney test set (never seen). The dashed line is chance (0.5).*
+
+**Generalization gap.** Table 4 gives the drop from the seen to the unseen generator. The ResNet has the largest drop (0.316 in accuracy and 0.453 in AUROC) and the diffusion detector the smallest (0.093 and 0.087). The small drop of the diffusion detector comes from its low starting point, and its Midjourney AUROC of 0.527 cannot be told apart from the CNN's 0.492 or the ResNet's 0.458. In this experiment no representation transferred, and a better score on SD15 went with a larger drop.
+
+| Detector | Accuracy gap | AUROC gap |
+|---|---|---|
+| CNN | 0.234 | 0.348 |
+| ResNet | 0.316 | 0.453 |
+| Diffusion error | 0.093 | 0.087 |
+
+*Table 4. Generalization gap: the SD15 score minus the Midjourney score.*
+
+**What the mistakes look like.** Table 5 gives the confusion counts. On Midjourney, each detector calls real photos fake and Midjourney fakes fake at nearly the same rate: the CNN does so for 31 of 150 real photos and 35 of 150 fakes, the ResNet for 33 and 26, and the diffusion detector for 59 and 61. A detector that separated the two groups would call many more fakes fake than real photos, so these detectors cannot tell Midjourney fakes from real photos. The high rate of the diffusion detector for both groups (about 40%) shows where its cutoff falls on this set, not better detection. On SD15 the detectors do separate the groups: the ResNet, for example, calls 60 of 75 fakes fake and 16 of 75 real photos fake.
+
+| Detector | Test set | Real called real | Real called fake | Fake called real | Fake called fake |
+|---|---|---|---|---|---|
+| CNN | SD15 | 62 | 13 | 25 | 50 |
+| CNN | Midjourney | 119 | 31 | 115 | 35 |
+| ResNet | SD15 | 59 | 16 | 15 | 60 |
+| ResNet | Midjourney | 117 | 33 | 124 | 26 |
+| Diffusion error | SD15 | 52 | 23 | 37 | 38 |
+| Diffusion error | Midjourney | 91 | 59 | 89 | 61 |
+
+*Table 5. Confusion counts at the 0.5 cutoff. Each row sums to the number of images in the test set.*
+
+**Training behavior.** Figures 2 and 3 show the training curves. Both networks stayed near a coin flip for the first few epochs and then improved steadily. The validation curve of the ResNet is noisier, which is expected with only 150 validation images. The gap between training and validation accuracy was small (about 0.05 for the CNN at its best epoch and about 0.01 for the ResNet in its last epochs), so the networks did not memorize their individual training images. What they learned does not carry over to Midjourney.
+
+![](../results/cnn_loss_curve.png)
+
+*Figure 2. CNN training curves: loss (left) and accuracy (right) on the training and validation sets. Training stopped after epoch 17 and the weights from epoch 12 were kept.*
+
+![](../results/resnet_loss_curve.png)
+
+*Figure 3. ResNet training curves in the same layout as Figure 2. Training ran for all 30 epochs.*
+
+**Reconstruction error.** Table 6 gives the mean reconstruction error at t = 410. SD15 fakes have a higher error than real photos in every split (by about 0.013 to 0.018), and Midjourney fakes are almost the same as real photos (higher by only 0.002). So the error is a clue for SD15 only. The direction is the opposite of the observation behind DIRE [3], that generated images are reconstructed better than real ones. This project uses a much simpler setup (a single step, 32x32 images, a small model pretrained for 32x32 images, and different generators), so the difference should not be read as a failure of [3], and we did not test why the directions differ. Figure 4 shows that the usefulness of the error depends on the noise level: the validation AUROC is about 0.5 at low noise, peaks at 0.647 near t = 410, and falls below 0.5 at high noise (0.394 at t = 800), where the direction of the signal reverses.
+
+| Split | Real | Fake | Fake minus real |
+|---|---|---|---|
+| Train (SD15 fakes) | 0.0612 | 0.0792 | 0.0180 |
+| Validation (SD15 fakes) | 0.0658 | 0.0792 | 0.0134 |
+| Test, seen (SD15 fakes) | 0.0611 | 0.0765 | 0.0154 |
+| Test, unseen (Midjourney fakes) | 0.0655 | 0.0676 | 0.0021 |
+
+*Table 6. Mean reconstruction error at t = 410 for real and fake images in each split.*
+
+![](../results/recon_noise_scan.png)
+
+*Figure 4. Validation AUROC of the reconstruction error (real versus SD15) against the noise level t. The dashed line is chance (0.5). The value t = 410 was chosen.*
+
 ## 6. Failure Analysis and Limitations
 
 **Scores by group.** Figure 5 shows how well the detectors separate the groups. On the SD15 test set the ROC curves of the three detectors rise above the diagonal, and on Midjourney they stay near it, which is what chance looks like. Table 7 shows the average chance of fake that the two networks gave to each group. Midjourney fakes received about the same average score as real photos (CNN 0.268 against 0.251, ResNet 0.264 against 0.287), while SD15 fakes received clearly higher scores (0.598 and 0.630). The networks were therefore not confidently wrong about Midjourney. They found nothing that set those images apart from real photos.
