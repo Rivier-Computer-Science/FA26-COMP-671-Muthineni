@@ -1,0 +1,50 @@
+project: Detecting AI-generated images under generator shift
+
+seed:
+  data_split: 42          # numpy shuffle used for the splits
+  resnet_training: 42     # torch seed set before ResNet training
+  cnn_training: not set   # CNN training was not seeded, use the saved weights
+
+dataset:
+  name: TheKernel01/Tiny-GenImage
+  hf_split: train
+  streaming: true
+  image_size: [32, 32]
+  pixel_scale: 0-1
+  collected:              # first images found in stream order
+    Real: 525
+    SD15: 375
+    Midjourney: 150
+
+splits:
+  train: {real: 225, SD15: 225}
+  validation: {real: 75, SD15: 75}
+  test_seen: {real: 75, SD15: 75}
+  test_unseen: {real: 150, Midjourney: 150}
+
+training:
+  batch_size: 32
+  optimizer: Adam
+  learning_rate: 0.001
+  loss: BCEWithLogitsLoss
+  max_epochs: 30
+  early_stopping_patience: 5
+  early_stopping_metric: validation loss
+  device: mps             # falls back to cpu
+
+models:
+  cnn:
+    conv_channels: [16, 32, 64]
+    dropout: 0.3
+    parameters: 89249
+    weights: models/cnn_baseline.pt
+  resnet:
+    residual_blocks: 3
+    dropout: 0.3
+    parameters: 77121
+    weights: models/resnet.pt
+  diffusion_error:
+    pretrained_model: google/ddpm-cifar10-32
+    noise_level_t: 410    # chosen on validation data, Real vs SD15 only
+    classifier: StandardScaler + LogisticRegression
+    weights: models/recon_classifier.joblib
