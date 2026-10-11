@@ -93,3 +93,38 @@ The CNN stopped after epoch 17, and its best validation loss was 0.468, reached 
 **Baselines and comparisons.** Always guessing one class gives 0.5 accuracy on these balanced sets. The three detectors share the same images, splits, test sets and metrics. The CNN and the ResNet also share every training setting, so that comparison asks whether a residual architecture transfers better. The diffusion detector differs in how the image is represented, so it asks whether a reconstruction-error score transfers better than pixels do.
 
 **Reproducibility.** The data split uses NumPy seed 42, and the noise in the diffusion detector uses fixed seeds, so its errors are repeatable. The torch seed 42 was set before ResNet training but after the model was created, so it fixes the batch order and not the starting weights, and the CNN was not seeded. Re-training a network will therefore give slightly different numbers, and the reported results come from the saved weights in the repository. Package versions are pinned in requirements.txt and the settings are listed in config.yaml.
+
+## 6. Failure Analysis and Limitations
+
+**Scores by group.** Figure 5 shows how well the detectors separate the groups. On the SD15 test set the ROC curves of the three detectors rise above the diagonal, and on Midjourney they stay near it, which is what chance looks like. Table 7 shows the average chance of fake that the two networks gave to each group. Midjourney fakes received about the same average score as real photos (CNN 0.268 against 0.251, ResNet 0.264 against 0.287), while SD15 fakes received clearly higher scores (0.598 and 0.630). The networks were therefore not confidently wrong about Midjourney. They found nothing that set those images apart from real photos.
+
+![](../results/roc_and_scores.png)
+
+*Figure 5. ROC curves on the SD15 test set (left) and the Midjourney test set (middle), and the distribution of ResNet scores for real photos, Midjourney fakes and SD15 fakes (right). The dashed line is chance.*
+
+| Group | CNN | ResNet |
+|---|---|---|
+| Real photos (from the Midjourney test set) | 0.251 | 0.287 |
+| SD15 fakes | 0.598 | 0.630 |
+| Midjourney fakes | 0.268 | 0.264 |
+
+*Table 7. Average chance of fake given by each network to each group of images.*
+
+**Example mistakes.** Figure 6 shows the first six mistakes of each kind made by the ResNet. The Midjourney fakes it missed look like ordinary animal photographs at 32x32 pixels, and nothing visible in them separates them from real photos. The real photos it flagged as fake are mostly blurry, low in contrast or cluttered, so softness or clutter may be read as a sign of an AI image, but with six pictures this is an observation and not a tested result. One missed SD15 fake is an obviously unnatural symmetric pattern, which suggests the detectors do not respond to visible oddness in a picture.
+
+![](../results/failure_examples_resnet.png)
+
+*Figure 6. Mistakes of the ResNet. Top row: Midjourney fakes called real. Middle row: SD15 fakes called real. Bottom row: real photos called fake. These are the first six of each kind, not a random sample.*
+
+**What the failures suggest.** The result matches the finding in [1] that a real-versus-fake classifier tends to treat what it does not recognize as real. It is consistent with the networks having learned cues specific to SD15, but we did not test this, and other explanations are possible: differences in content or style between the SD15 and Midjourney images, the loss of fine detail at 32x32 pixels, or chance variation in small samples. The diffusion detector fails in a similar way. Its reconstruction error separates SD15 fakes from real photos (Table 6) but not Midjourney fakes, and its cutoff, set on SD15 data, labels about 40% of both groups of Midjourney images as fake (59 of 150 real photos and 61 of 150 fakes).
+
+**Limitations.**
+
+- The test sets are small (75 and 75 images for SD15, 150 and 150 for Midjourney), so differences of a few points between detectors are not meaningful.
+- There is one seen and one unseen generator. The results show that these detectors did not transfer from SD15 to Midjourney, not that no detector can.
+- Each model was trained once, and the CNN and the ResNet starting weights were not seeded, so run-to-run variation is unknown.
+- The images are only 32x32 pixels, so fine detail was lost, and results may differ at full resolution.
+- No hyperparameters were searched for any model, and the ResNet may have been limited by the 30-epoch cap.
+- The CNN and the ResNet differ in more than skip connections, so the comparison does not isolate them. The proper ablation, a ResNet with the skip connections removed, was not run.
+- The diffusion detector is a simplified version of the idea in [3], using a small model made for 32x32 images. It is not a reproduction of that work.
+- The subset takes the first matching rows of the stream and the examples we inspected were mostly animals, so the conclusions may not apply to people, faces or other content.
