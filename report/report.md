@@ -65,3 +65,31 @@ AI image generators appear faster than detectors can be retrained, so a useful d
 The noise is generated with fixed seeds, so the errors are repeatable. A logistic regression on the standardized error then predicts real or fake. This follows the idea of DIRE [3] in a much simpler form: a single noise-and-predict step on 32x32 images with a small pretrained model, so that it runs on a laptop. The noise level t = 410 was chosen by scanning 16 values and keeping the one with the highest validation AUROC for real versus SD15 images (0.647). Midjourney images were never used for this choice.
 
 **Why these three.** Together they compare two ways of representing an image, raw pixels (CNN and ResNet) and a diffusion-based error score, under the same data and the same shift to an unseen generator.
+
+## 4. Experimental Setup
+
+**Protocol.** Each detector is fitted on the training split (225 real and 225 SD15 images), monitored on the validation split (75 and 75), and then scored on two held-out test sets (Table 1): the SD15 test set (75 and 75), which shows how well it works on the generator it was trained on, and the Midjourney test set (150 and 150), which shows how well it works on a generator it has never seen. The difference between the two scores is the generalization gap. No detector was tuned on either test set. An early check at t = 100 did print the mean reconstruction error of 100 Midjourney images, but the noise level was then chosen from validation scans on real and SD15 images alone. The ResNet was added after the CNN and diffusion results were known, to ask whether architecture could explain the failure. Its settings were copied from the CNN and not tuned.
+
+**Training the CNN and the ResNet.** Both use the settings in Table 2. Dropout and early stopping act as regularizers (course Chapter 9 [4]).
+
+| Setting | Value |
+|---|---|
+| Loss | binary cross-entropy on the logit |
+| Optimizer | Adam, learning rate 0.001 |
+| Batch size | 32 (training batches shuffled) |
+| Maximum epochs | 30 |
+| Early stopping | stop after 5 epochs without a lower validation loss, keep the weights with the lowest validation loss |
+| Dropout | 0.3 |
+| Hardware | laptop with an Apple GPU (PyTorch mps backend) |
+
+*Table 2. Training settings shared by the CNN and the ResNet.*
+
+The CNN stopped after epoch 17, and its best validation loss was 0.468, reached at epoch 12. The ResNet used all 30 epochs, and its best validation loss was 0.461, reached near the end of training (epochs 28 and 29), so the 30-epoch cap may have limited it. The cap was kept the same for both networks and was not extended.
+
+**The diffusion detector.** No network is trained. The noise level was scanned over 16 values from 25 to 999 on the validation images, and t = 410 gave the highest validation AUROC (0.647). The classifier is a standardization step followed by scikit-learn's logistic regression with default settings, fitted on the 450 training errors. Its AUROC is 0.669 on the training split and 0.647 on the validation split.
+
+**Metrics.** Accuracy, AUROC and F1 are computed for each detector on each test set, together with a confusion matrix. Accuracy, F1 and the confusion matrix use a probability cutoff of 0.5. Every test set is exactly balanced, so accuracy has a clear chance level of 0.5, and no class weights, oversampling or undersampling were used. AUROC measures how well a detector ranks fakes above real photos without depending on a cutoff, and it is also 0.5 at chance. F1 and the confusion matrix show what kind of mistakes a detector makes. With 75 real and 75 fake images, an AUROC between about 0.41 and 0.59 cannot be told apart from chance; with 150 and 150 the band is about 0.43 to 0.57, and accuracy on 300 images between about 0.44 and 0.56 is also within chance. These are rough 95% bands from a normal approximation when there is no signal.
+
+**Baselines and comparisons.** Always guessing one class gives 0.5 accuracy on these balanced sets. The three detectors share the same images, splits, test sets and metrics. The CNN and the ResNet also share every training setting, so that comparison asks whether a residual architecture transfers better. The diffusion detector differs in how the image is represented, so it asks whether a reconstruction-error score transfers better than pixels do.
+
+**Reproducibility.** The data split uses NumPy seed 42, and the noise in the diffusion detector uses fixed seeds, so its errors are repeatable. The torch seed 42 was set before ResNet training but after the model was created, so it fixes the batch order and not the starting weights, and the CNN was not seeded. Re-training a network will therefore give slightly different numbers, and the reported results come from the saved weights in the repository. Package versions are pinned in requirements.txt and the settings are listed in config.yaml.
