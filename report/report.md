@@ -144,3 +144,11 @@ The CNN stopped after epoch 17, and its best validation loss was 0.468, reached 
 **Compute cost.** The detectors are small (89,249 and 77,121 parameters, plus a frozen 35.7-million-parameter diffusion model used only for inference), and everything ran on a laptop. We did not measure energy use. Training bigger detectors on more images would cost much more.
 
 **Recommended use.** At most, a detector like this is one signal among several. Its error rates should be published with it, it should be re-tested when new generators appear, and it should not be the sole basis for a decision about a person.
+
+## 8. Conclusion
+
+This project asked whether a detector of AI-generated images still works on a generator it has not seen. Three detectors were trained on real photographs and SD15 fakes: a CNN, a ResNet and a logistic regression on the reconstruction error of a pretrained diffusion model. On SD15 they worked to different degrees (AUROC 0.840, 0.911 and 0.614). On Midjourney, which none of them had seen, all three fell to chance (AUROC 0.492, 0.458 and 0.527). The residual architecture scored best on SD15 and showed the largest drop, and the diffusion detector's small drop came from its low starting point.
+
+Three points follow. First, scores on the training generator overstate how a detector will do on new generators, so reports should always include an unseen generator. Second, neither the architecture nor the image representation we tried made the detectors transfer. Third, the simplified reconstruction-error detector did not behave as described for DIRE [3]: SD15 fakes had a higher error than real photos, and Midjourney fakes were close to real photos. We did not test why, and the differences from [3] (a single step, 32x32 images, a small model, different generators) are too large for this result to count against that work.
+
+The evidence is limited by small test sets, one seen and one unseen generator, one run per model and tiny images. Future work should repeat the runs with seeds and report intervals, test several unseen generators and several training generators, use larger images, run the ablation that removes skip connections from the ResNet, and compare against a closer reproduction of [3].
