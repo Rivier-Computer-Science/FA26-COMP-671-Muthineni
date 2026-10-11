@@ -128,3 +128,19 @@ The CNN stopped after epoch 17, and its best validation loss was 0.468, reached 
 - The CNN and the ResNet differ in more than skip connections, so the comparison does not isolate them. The proper ablation, a ResNet with the skip connections removed, was not run.
 - The diffusion detector is a simplified version of the idea in [3], using a small model made for 32x32 images. It is not a reproduction of that work.
 - The subset takes the first matching rows of the stream and the examples we inspected were mostly animals, so the conclusions may not apply to people, faces or other content.
+
+## 7. Ethics, Limitations, and Responsible Use
+
+**Wrong answers in both directions cause harm.** A detector that calls a real photograph fake can discredit a journalist, a witness or a victim. On the SD15 test set the CNN, the ResNet and the diffusion detector called 13, 16 and 23 of 75 real photos fake (17%, 21% and 31%). On the Midjourney test set the rates were 31, 33 and 59 of 150 (21%, 22% and 39%). A detector that calls a fake real can give it false credibility. On Midjourney the networks missed 115 and 124 of 150 fakes (77% and 83%) and the diffusion detector missed 89 (59%). A detector can also be used as false evidence in either direction: a fake can be defended by saying it passed the check, and a real photo can be dismissed by saying it was flagged.
+
+**Reliability must not be overstated.** Scores measured on the generator used in training are much higher than scores on a new generator (Table 4). Reporting only the SD15 numbers would mislead, and none of these detectors should be used to judge images from generators it has not been tested on. Any real deployment would need error rates measured on current generators, and a human reviewer for every decision that affects a person.
+
+**Possible bias.** The dataset has no information about the people or places in its photographs, so we could not measure whether false flags are more common for some groups. Real photos flagged as fake were often blurry or low in contrast (Figure 6), which suggests image quality may influence the result. If so, people with older cameras or poor lighting could be flagged more often. We did not test this. The inspected images were mostly animals, so the results say nothing about faces or people, where the harms of misuse are greatest.
+
+**Data and privacy.** The dataset is licensed CC BY-NC-SA 4.0, which allows non-commercial use only, so this project is academic. Its dataset card does not say where the real photographs came from or whether the people in them agreed to be included, and we did not audit them. Large collections of photographs from the web can include identifiable people.
+
+**Dual use.** Publishing a detector and its weaknesses can help people who make fakes learn what to avoid. A published detector can also be used to test whether new fakes pass. The detectors here are small and weak, so the added risk is low, but a stronger detector should be released with this in mind.
+
+**Compute cost.** The detectors are small (89,249 and 77,121 parameters, plus a frozen 35.7-million-parameter diffusion model used only for inference), and everything ran on a laptop. We did not measure energy use. Training bigger detectors on more images would cost much more.
+
+**Recommended use.** At most, a detector like this is one signal among several. Its error rates should be published with it, it should be re-tested when new generators appear, and it should not be the sole basis for a decision about a person.
