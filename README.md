@@ -46,7 +46,7 @@ Checks in the notebook: no missing values, no NaN or infinite pixels, no duplica
 - The diffusion detector has the smallest drop only because it starts lower. It did not generalize better.
 - Midjourney fakes get about the same average "fake" score as real photos (0.26-0.27 vs 0.25-0.29 for the CNN and ResNet), so the models see them as ordinary photos.
 
-Limits: 150 Midjourney fakes, one unseen generator, 32x32 images, and each model trained once. At this sample size an AUROC between about 0.46 and 0.59 cannot be told apart from 0.5.
+Limits: 150 Midjourney fakes, one unseen generator, 32x32 images, and each model trained once. At this sample size an AUROC between about 0.43 and 0.57 cannot be told apart from 0.5.
 
 ## Repository layout
 
