@@ -44,7 +44,7 @@ Checks in the notebook: no missing values, no NaN or infinite pixels, no duplica
 - All three detectors work on SD15 and fall to chance on Midjourney.
 - The ResNet is best on SD15 and has the biggest drop, so the residual architecture did not help on the unseen generator.
 - The diffusion detector has the smallest drop only because it starts lower. It did not generalize better.
-- Midjourney fakes get about the same average "fake" score as real photos (0.26-0.27 vs 0.25-0.29 for the CNN and ResNet), so the models see them as ordinary photos.
+- Midjourney fakes get about the same average "fake" score as real photos (0.26-0.27 vs 0.25-0.29 for the CNN and ResNet), so nothing in the scores separates them from real photos.
 
 Limits: 150 Midjourney fakes, one unseen generator, 32x32 images, and each model trained once. At this sample size an AUROC between about 0.43 and 0.57 cannot be told apart from 0.5.
 
