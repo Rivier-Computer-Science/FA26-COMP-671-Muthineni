@@ -1,50 +1,32 @@
-project: Detecting AI-generated images under generator shift
+# Settings for notebooks/Proj.ipynb. Change a value here, run the notebook again, and the results follow.
 
-seed:
-  data_split: 42          # numpy shuffle used for the splits
-  resnet_training: 42     # set after the model was created: fixes batch order, not starting weights
-  cnn_training: not set   # CNN training was not seeded, use the saved weights
+dataset: TheKernel01/Tiny-GenImage
+seed: 42                       # random sampling, splitting, weights
+image_size: 32
 
-dataset:
-  name: TheKernel01/Tiny-GenImage
-  hf_split: train
-  streaming: true
-  image_size: [32, 32]
-  pixel_scale: 0-1
-  collected:              # first images found in stream order
-    Real: 525
-    SD15: 375
-    Midjourney: 150
+# the generator the models are trained on, and the ones they are only tested on
+train_generator: SD15
+unseen_generators: [Midjourney, ADM, BigGAN, GLIDE, VQDM, Wukong]
 
-splits:
-  train: {real: 225, SD15: 225}
-  validation: {real: 75, SD15: 75}
-  test_seen: {real: 75, SD15: 75}
-  test_unseen: {real: 150, Midjourney: 150}
+# images sampled from the dataset
+real_images: 1000
+seen_images: 1000              # SD15
+unseen_images: 300             # per unseen generator (test only)
 
-training:
-  batch_size: 32
-  optimizer: Adam
-  learning_rate: 0.001
-  loss: BCEWithLogitsLoss
-  max_epochs: 30
-  early_stopping_patience: 5
-  early_stopping_metric: validation loss
-  device: mps             # falls back to cpu
+# split of the real + SD15 images, per class (the rest is for training)
+val_per_class: 150
+test_per_class: 300
 
-models:
-  cnn:
-    conv_channels: [16, 32, 64]
-    dropout: 0.3
-    parameters: 89249
-    weights: models/cnn_baseline.pt
-  resnet:
-    residual_blocks: 3
-    dropout: 0.3
-    parameters: 77121
-    weights: models/resnet.pt
-  diffusion_error:
-    pretrained_model: google/ddpm-cifar10-32
-    noise_level_t: 410    # chosen on validation data, Real vs SD15 only
-    classifier: StandardScaler + LogisticRegression
-    weights: models/recon_classifier.joblib
+# training
+epochs: 30
+batch_size: 32
+learning_rates: [0.001, 0.0003]   # tried during tuning
+dropouts: [0.3, 0.5]              # tried during tuning
+final_seeds: [0, 1, 2]            # every final model is trained once per seed
+
+# sharpness check (Step 13): blur strengths (Gaussian sigma in pixels) of the blurred training copies
+blur_sigmas: [0.5, 1.0, 1.5]
+
+# diffusion model (used as it is, never trained here)
+ddpm_model: google/ddpm-cifar10-32
+noise_levels: [50, 100, 200, 300, 400, 500, 700]
