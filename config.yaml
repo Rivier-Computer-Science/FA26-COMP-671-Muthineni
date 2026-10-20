@@ -1,0 +1,32 @@
+# Settings for notebooks/Proj.ipynb. Change a value here, run the notebook again, and the results follow.
+
+dataset: TheKernel01/Tiny-GenImage
+seed: 42                       # random sampling, splitting, weights
+image_size: 32
+
+# the generator the models are trained on, and the ones they are only tested on
+train_generator: SD15
+unseen_generators: [Midjourney, ADM, BigGAN, GLIDE, VQDM, Wukong]
+
+# images sampled from the dataset
+real_images: 1000
+seen_images: 1000              # SD15
+unseen_images: 300             # per unseen generator (test only)
+
+# split of the real + SD15 images, per class (the rest is for training)
+val_per_class: 150
+test_per_class: 300
+
+# training
+epochs: 30
+batch_size: 32
+learning_rates: [0.001, 0.0003]   # tried during tuning
+dropouts: [0.3, 0.5]              # tried during tuning
+final_seeds: [0, 1, 2]            # every final model is trained once per seed
+
+# sharpness check (Step 13): blur strengths (Gaussian sigma in pixels) of the blurred training copies
+blur_sigmas: [0.5, 1.0, 1.5]
+
+# diffusion model (used as it is, never trained here)
+ddpm_model: google/ddpm-cifar10-32
+noise_levels: [50, 100, 200, 300, 400, 500, 700]
