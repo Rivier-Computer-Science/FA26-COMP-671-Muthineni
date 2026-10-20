@@ -1,4 +1,0 @@
-model,SD15 accuracy,Midjourney accuracy,SD15 AUROC,Midjourney AUROC,accuracy gap,AUROC gap
-CNN,0.747,0.513,0.84,0.492,0.234,0.348
-ResNet,0.793,0.477,0.911,0.458,0.316,0.453
-Diffusion error,0.6,0.507,0.614,0.527,0.093,0.087

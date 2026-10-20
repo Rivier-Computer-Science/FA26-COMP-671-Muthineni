@@ -1,4 +1,0 @@
-group,CNN,ResNet
-Real photos,0.251,0.287
-SD15 fakes,0.598,0.63
-Midjourney fakes,0.268,0.264

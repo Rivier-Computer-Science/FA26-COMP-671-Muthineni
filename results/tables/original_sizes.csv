@@ -1,0 +1,9 @@
+generator,median_width,min_width,max_width,share_jpeg
+ADM,256.0,256,256,0.0
+BigGAN,128.0,128,128,0.0
+GLIDE,256.0,256,256,0.0
+Midjourney,1024.0,1024,1024,0.0
+Real,500.0,34,4786,1.0
+SD15,512.0,512,512,0.0
+VQDM,256.0,256,256,0.0
+Wukong,512.0,512,512,0.0
