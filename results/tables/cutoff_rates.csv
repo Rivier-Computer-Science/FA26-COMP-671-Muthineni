@@ -1,0 +1,9 @@
+what,share
+Real photos wrongly called fake,0.24666666666666667
+SD15 fakes correctly called fake,0.8033333333333333
+Midjourney fakes correctly called fake,0.24666666666666667
+ADM fakes correctly called fake,0.18
+BigGAN fakes correctly called fake,0.19333333333333333
+GLIDE fakes correctly called fake,0.25333333333333335
+VQDM fakes correctly called fake,0.15666666666666668
+Wukong fakes correctly called fake,0.8666666666666667
